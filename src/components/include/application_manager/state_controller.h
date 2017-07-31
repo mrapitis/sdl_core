@@ -90,6 +90,16 @@ class StateController {
                               HmiStatePtr new_state) = 0;
 
   virtual bool IsStateActive(HmiState::StateID state_id) const = 0;
+  
+  
+  /**
+   * @brief Changes phone call state
+   * @param app contains application
+   * @param reason contains reason according to temporary HMI state changes
+   * behavior.
+   */
+  virtual void OnAppStateChanged(ApplicationSharedPtr app,
+                                 StateChangeReason reason) = 0;  
 };
 }  // namespace application_manager
 

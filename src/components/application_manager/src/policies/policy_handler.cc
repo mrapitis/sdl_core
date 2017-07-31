@@ -1230,6 +1230,10 @@ void PolicyHandler::OnAllowSDLFunctionalityNotification(
                                              ? AudioStreamingState::AUDIBLE
                                              : AudioStreamingState::NOT_AUDIBLE;
 
+      //todo mjr test this
+      application_manager_.state_controller().OnAppStateChanged(
+          app, kActivationRequestedReason);
+      
       application_manager_.state_controller().SetRegularState(
           app, mobile_apis::HMILevel::HMI_FULL, state, true);
       last_activated_app_id_ = 0;

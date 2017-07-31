@@ -563,7 +563,7 @@ class ApplicationManager {
    * @return new regular HMI state
    */
   virtual HmiStatePtr CreateRegularState(
-      uint32_t app_id,
+      utils::SharedPtr<Application> app,
       mobile_apis::HMILevel::eType hmi_level,
       mobile_apis::AudioStreamingState::eType audio_state,
       mobile_apis::SystemContext::eType system_context) const = 0;

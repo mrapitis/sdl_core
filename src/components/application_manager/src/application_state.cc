@@ -90,13 +90,13 @@ void ApplicationState::RemoveState(HmiState::StateID state) {
     case HmiState::StateID::STATE_ID_REGULAR:
       LOG4CXX_ERROR(logger_,
                     "State of type '" << state << "'can't be removed.");
-      break;
+      return;
     case HmiState::StateID::STATE_ID_POSTPONED:
       RemovePostponedState();
-      break;
+      return;
     default:
       RemoveHMIState(state);
-      break;
+      return;
   }
 }
 
@@ -114,6 +114,19 @@ HmiStatePtr ApplicationState::GetState(HmiState::StateID state_id) const {
       return CurrentHmiState();
   }
 }
+
+void ApplicationState::SetAppState(HmiState::StateID state_id,
+                                   StateChangeReason reason) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock auto_lock(hmi_states_lock_);
+  HmiStates::iterator it = std::find_if(
+      hmi_states_.begin(), hmi_states_.end(), StateIDComparator(state_id));
+  if (hmi_states_.end() != it) {
+    LOG4CXX_DEBUG(logger_, "Change state with id = " << state_id);
+    (*it)->set_reason(reason);
+  }
+}
+
 
 void ApplicationState::AddHMIState(HmiStatePtr state) {
   LOG4CXX_AUTO_TRACE(logger_);
@@ -148,8 +161,8 @@ void ApplicationState::RemoveHMIState(HmiState::StateID state_id) {
   DCHECK_OR_RETURN_VOID(it != hmi_states_.begin());
   HmiStates::iterator next = it;
   HmiStates::iterator prev = it;
-  next++;
-  prev--;
+  ++next;
+  --prev;
   if (next != hmi_states_.end()) {
     HmiStatePtr next_state = *next;
     HmiStatePtr prev_state = *prev;

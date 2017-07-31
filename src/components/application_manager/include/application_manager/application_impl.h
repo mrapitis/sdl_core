@@ -215,6 +215,13 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   virtual void set_is_application_data_changed(bool state_application_data);
 
   /**
+   * @brief SetInitialState sets initial HMI state for application on
+   * registration
+   * @param state Hmi state value
+   */
+  void SetInitialState(HmiStatePtr state) FINAL;
+  
+  /**
    * @brief Check's if it is media, voice communication or navigation
    * application
    *
@@ -278,6 +285,17 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
    * @return Postponed hmi state of application
    */
   virtual const HmiStatePtr PostponedHmiState() const;
+  
+  /**
+   * @brief Sets HMI state for current application
+   * state
+   * @param state_id contains HMI state id
+   * @param reason contains reason according to temporary HMI state changes
+   * behavior.
+   */
+  void SetAppState(HmiState::StateID state_id,
+                   StateChangeReason reason) OVERRIDE;  
+  
 
   uint32_t audio_stream_retry_number() const;
 

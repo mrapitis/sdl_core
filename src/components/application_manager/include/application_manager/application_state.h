@@ -85,6 +85,15 @@ class ApplicationState {
    * @return Pointer to application state
    */
   HmiStatePtr GetState(HmiState::StateID state_id) const;
+  
+  /**
+   * @brief Sets HMI state for current application
+   * state
+   * @param state_id contains HMI state id
+   * @param reason contains reason according to temporary HMI state changes
+   * behavior.
+   */
+  void SetAppState(HmiState::StateID state_id, StateChangeReason reason);  
 
  private:
   /**
