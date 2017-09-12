@@ -156,7 +156,8 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   void set_device(connection_handler::DeviceHandle device);
   virtual uint32_t get_grammar_id() const;
   virtual void set_grammar_id(uint32_t value);
-
+  bool is_audio() const OVERRIDE;
+  
   virtual void set_protocol_version(const ProtocolVersion& protocol_version);
   virtual ProtocolVersion protocol_version() const;
 
@@ -212,6 +213,13 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   virtual bool is_application_data_changed() const;
 
   virtual void set_is_application_data_changed(bool state_application_data);
+  
+  /**
+   * @brief SetInitialState sets initial HMI state for application on
+   * registration
+   * @param state Hmi state value
+   */
+  void SetInitialState(HmiStatePtr state) FINAL;  
 
   /**
    * @brief Check's if it is media, voice communication or navigation
@@ -277,7 +285,17 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
    * @return Postponed hmi state of application
    */
   virtual const HmiStatePtr PostponedHmiState() const;
-
+  
+  /**
+   * @brief Sets HMI state for current application
+   * state
+   * @param state_id contains HMI state id
+   * @param reason contains reason according to temporary HMI state changes
+   * behavior.
+   */
+  void SetAppState(HmiState::StateID state_id,
+                   StateChangeReason reason) OVERRIDE;    
+  
   uint32_t audio_stream_retry_number() const;
 
   void set_audio_stream_retry_number(const uint32_t& audio_stream_retry_number);

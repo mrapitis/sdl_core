@@ -217,6 +217,13 @@ class DynamicApplicationData {
 
   virtual void set_video_stream_retry_number(
       const uint32_t& video_stream_retry_number) = 0;
+	  
+  /**
+   * @brief Checks if application is media, voice communication or navigation
+   * @return true if application is media, voice communication or navigation,
+   * false otherwise
+   */
+  virtual bool is_audio() const = 0;	  
 
   /*
    * @brief Adds a command to the in application menu
@@ -590,6 +597,13 @@ class Application : public virtual InitialApplicationData,
   virtual UsageStatistics& usage_report() = 0;
 
   /**
+   * @brief SetInitialState sets initial HMI state for application on
+   * registration
+   * @param state Hmi state value
+   */
+  virtual void SetInitialState(HmiStatePtr state) = 0;
+  
+  /**
    * @brief SetRegularState set permanent state of application
    *
    * @param state state to setup
@@ -646,6 +660,16 @@ class Application : public virtual InitialApplicationData,
    */
   virtual const HmiStatePtr PostponedHmiState() const = 0;
 
+  /**
+   * @brief Sets HMI state for current application
+   * state
+   * @param state_id contains HMI state id
+   * @param reason contains reason according to temporary HMI state changes
+   * behavior.
+   */
+  virtual void SetAppState(HmiState::StateID state_id,
+                           StateChangeReason reason) = 0;  
+  
   /**
    * @brief Keeps id of softbuttons which is created in commands:
    * Alert, Show, ScrollableMessage, ShowConstantTBT, AlertManeuver,

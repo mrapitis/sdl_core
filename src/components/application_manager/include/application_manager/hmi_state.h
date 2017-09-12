@@ -33,14 +33,27 @@
 #ifndef SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_HMISTATE_H
 #define SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_HMISTATE_H
 
+#include <stdint.h>
 #include <list>
 #include "interfaces/MOBILE_API.h"
 #include "utils/shared_ptr.h"
+#include <memory>
 
 namespace application_manager {
 
+/**
+ * @brief The StateChangeReason enum describes
+ * reason according to temporary HMI state changes behavior.
+ * If no events occured kGeneralReason should be presented
+ */
+enum StateChangeReason {
+  kGeneralReason = -1,
+  kResumptionRequestedReason = 0,
+  kActivationRequestedReason = 1
+};
 class HmiState;
 class ApplicationManager;
+class Application;
 
 typedef utils::SharedPtr<HmiState> HmiStatePtr;
 
@@ -70,10 +83,12 @@ class HmiState {
     STATE_ID_EMBEDDED_NAVI
   };
 
-  HmiState(uint32_t app_id, const ApplicationManager& app_mngr);
-  HmiState(uint32_t app_id,
+  HmiState(utils::SharedPtr<Application> app, 
+           const ApplicationManager& app_mngr);
+  HmiState(utils::SharedPtr<Application> app,
            const ApplicationManager& app_mngr,
            StateID state_id);
+
 
   virtual ~HmiState() {}
 
@@ -164,37 +179,48 @@ class HmiState {
   virtual void set_state_id(StateID state_id) {
     state_id_ = state_id;
   }
+  /**
+   * @brief Sets reason according to temporary HMI state changes behavior.
+   * @param reason contains reason for changing of temporary HMI state
+   */
+  void set_reason(StateChangeReason reason) {
+    reason_ = reason;
+  }
+
+  /**
+   * @brief Returns reason
+   */
+  StateChangeReason reason() const {
+    return reason_;
+  }
 
  protected:
-  uint32_t app_id_;
+  utils::SharedPtr<Application> app_;
   StateID state_id_;
   const ApplicationManager& app_mngr_;
   HmiStatePtr parent_;
   mobile_apis::HMILevel::eType hmi_level_;
   mobile_apis::AudioStreamingState::eType audio_streaming_state_;
   mobile_apis::SystemContext::eType system_context_;
+  StateChangeReason reason_;
 
- protected:
   /**
    * @brief is_navi_app check if app is navi
-   * @param app_id application id
    * @return true if app is navi, otherwise return false
    */
-  bool is_navi_app(const uint32_t app_id) const;
+  bool is_navi_app() const;
 
   /**
    * @brief is_media_app check if app is media
-   * @param app_id application id
    * @return true if media_app, otherwise return false
    */
-  bool is_media_app(const uint32_t app_id) const;
+  bool is_media_app() const;
 
   /**
    * @brief is_voice_communicationn_app check if app is voice comunication
-   * @param app_id application id
    * @return true if voice_communicationn_app, otherwise return false
    */
-  bool is_voice_communication_app(const uint32_t app_id) const;
+  bool is_voice_communication_app() const;
 
  private:
   void operator=(const HmiState&);
@@ -205,20 +231,22 @@ class HmiState {
  */
 class VRHmiState : public HmiState {
  public:
-  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE;
-  VRHmiState(uint32_t app_id, const ApplicationManager& app_mngr);
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state() const;
+  VRHmiState(utils::SharedPtr<Application> app,
+             const ApplicationManager& app_mngr);
 };
+
 
 /**
  * @brief The TTSHmiState class implements logic of TTS temporary state
  */
 class TTSHmiState : public HmiState {
  public:
-  TTSHmiState(uint32_t app_id, const ApplicationManager& app_mngr);
-  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE;
+  TTSHmiState(utils::SharedPtr<Application> app,
+              const ApplicationManager& app_mngr);
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state() const;
 };
+
 
 /**
  * @brief The NaviStreamingState class implements logic of NaviStreaming
@@ -226,10 +254,11 @@ class TTSHmiState : public HmiState {
  */
 class NaviStreamingHmiState : public HmiState {
  public:
-  NaviStreamingHmiState(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE;
+  NaviStreamingHmiState(utils::SharedPtr<Application> app,
+                        const ApplicationManager& app_mngr);
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state() const;
 };
+
 
 /**
  * @brief The PhoneCallHmiState class implements logic of PhoneCall temporary
@@ -237,13 +266,15 @@ class NaviStreamingHmiState : public HmiState {
  */
 class PhoneCallHmiState : public HmiState {
  public:
-  PhoneCallHmiState(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::HMILevel::eType hmi_level() const OVERRIDE;
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE {
+  PhoneCallHmiState(utils::SharedPtr<Application> app,
+                    const ApplicationManager& app_mngr);
+  virtual mobile_apis::HMILevel::eType hmi_level() const;
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state()
+      const {
     return mobile_apis::AudioStreamingState::NOT_AUDIBLE;
   }
 };
+
 
 /**
  * @brief The SafetyModeHmiState class implements logic of SafetyMode temporary
@@ -251,12 +282,14 @@ class PhoneCallHmiState : public HmiState {
  */
 class SafetyModeHmiState : public HmiState {
  public:
-  SafetyModeHmiState(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE {
+  SafetyModeHmiState(utils::SharedPtr<Application> app,
+                     const ApplicationManager& app_mngr);
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state()
+      const {
     return mobile_apis::AudioStreamingState::NOT_AUDIBLE;
   }
 };
+
 
 /**
  * @brief The DeactivateHMI class implements logic of DeactivateHMI temporary
@@ -264,13 +297,15 @@ class SafetyModeHmiState : public HmiState {
  */
 class DeactivateHMI : public HmiState {
  public:
-  DeactivateHMI(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::HMILevel::eType hmi_level() const OVERRIDE;
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE {
+  DeactivateHMI(utils::SharedPtr<Application> app,
+                const ApplicationManager& app_mngr);
+  virtual mobile_apis::HMILevel::eType hmi_level() const;
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state()
+      const {
     return mobile_apis::AudioStreamingState::NOT_AUDIBLE;
   }
 };
+
 
 /**
  * @brief The AudioSource class implements logic of OnEventChanged(AUDIO_SOURCE)
@@ -278,13 +313,13 @@ class DeactivateHMI : public HmiState {
  */
 class AudioSource : public HmiState {
  public:
-  AudioSource(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::HMILevel::eType hmi_level() const OVERRIDE;
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE {
-    return mobile_apis::AudioStreamingState::NOT_AUDIBLE;
-  }
+ public:
+  AudioSource(utils::SharedPtr<Application> app,
+              const ApplicationManager& app_mngr);
+  virtual mobile_apis::HMILevel::eType hmi_level() const;
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state() const;
 };
+
 
 /**
  * @brief The EmbeddedNavi class implements logic of
@@ -293,12 +328,11 @@ class AudioSource : public HmiState {
  */
 class EmbeddedNavi : public HmiState {
  public:
-  EmbeddedNavi(uint32_t app_id, const ApplicationManager& app_mngr);
-  mobile_apis::HMILevel::eType hmi_level() const OVERRIDE;
-  mobile_apis::AudioStreamingState::eType audio_streaming_state()
-      const OVERRIDE {
-    return mobile_apis::AudioStreamingState::NOT_AUDIBLE;
-  }
+  EmbeddedNavi(utils::SharedPtr<Application> app,
+               const ApplicationManager& app_mngr);
+  virtual mobile_apis::HMILevel::eType hmi_level() const;
+  virtual mobile_apis::AudioStreamingState::eType audio_streaming_state() const;
+
 };
 }
 #endif  // SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_HMISTATE_H

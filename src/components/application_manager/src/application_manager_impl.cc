@@ -482,7 +482,15 @@ ApplicationSharedPtr ApplicationManagerImpl::RegisterApplication(
     ManageMobileCommand(response, commands::Command::ORIGIN_SDL);
     return ApplicationSharedPtr();
   }
+  
+  HmiStatePtr initial_state =
+      CreateRegularState(utils::SharedPtr<Application>(application),
+                         mobile_apis::HMILevel::INVALID_ENUM,
+                         mobile_apis::AudioStreamingState::INVALID_ENUM,
+                         mobile_api::SystemContext::SYSCTXT_MAIN);
 
+  application->SetInitialState(initial_state);  
+  
   application->set_folder_name(policy_app_id + "_" +
                                application->mac_address());
   // To load persistent files, app folder name must be known first, which is now
@@ -584,6 +592,7 @@ bool ApplicationManagerImpl::ActivateApplication(ApplicationSharedPtr app) {
 
   // remove from resumption if app was activated by user
   resume_controller().OnAppActivated(app);
+  state_ctrl_.OnAppStateChanged(app, kActivationRequestedReason);
   HMILevel::eType hmi_level = HMILevel::HMI_FULL;
   AudioStreamingState::eType audio_state;
   app->IsAudioApplication() ? audio_state = AudioStreamingState::AUDIBLE
@@ -726,11 +735,11 @@ void ApplicationManagerImpl::SetAllAppsAllowed(const bool allowed) {
 }
 
 HmiStatePtr ApplicationManagerImpl::CreateRegularState(
-    uint32_t app_id,
+    utils::SharedPtr<Application> app,
     mobile_apis::HMILevel::eType hmi_level,
     mobile_apis::AudioStreamingState::eType audio_state,
     mobile_apis::SystemContext::eType system_context) const {
-  HmiStatePtr state(new HmiState(app_id, *this));
+  HmiStatePtr state(new HmiState(app, *this));
   state->set_hmi_level(hmi_level);
   state->set_audio_streaming_state(audio_state);
   state->set_system_context(system_context);

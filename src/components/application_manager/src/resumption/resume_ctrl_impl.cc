@@ -230,6 +230,8 @@ bool ResumeCtrlImpl::SetAppHMIState(
     return false;
   }
   application->set_is_resuming(true);
+  application_manager_.state_controller().OnAppStateChanged(
+      application, kResumptionRequestedReason);
   application_manager_.state_controller().SetRegularState(application,
                                                           hmi_level);
   LOG4CXX_INFO(logger_,

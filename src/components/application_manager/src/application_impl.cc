@@ -132,13 +132,13 @@ ApplicationImpl::ApplicationImpl(
   // subscribe application to custom button by default
   SubscribeToButton(mobile_apis::ButtonName::CUSTOM_BUTTON);
   // load persistent files
-  LoadPersistentFiles();
-  HmiStatePtr initial_state = application_manager_.CreateRegularState(
+  //LoadPersistentFiles();
+  /*HmiStatePtr initial_state = application_manager_.CreateRegularState(
       app_id(),
       mobile_apis::HMILevel::INVALID_ENUM,
       mobile_apis::AudioStreamingState::INVALID_ENUM,
       mobile_api::SystemContext::SYSCTXT_MAIN);
-  state_.InitState(initial_state);
+  state_.InitState(initial_state);*/
 
   video_stream_suspend_timeout_ =
       application_manager_.get_settings().video_data_stopped_timeout();
@@ -169,6 +169,11 @@ void ApplicationImpl::CloseActiveMessage() {
 
 bool ApplicationImpl::IsFullscreen() const {
   return mobile_api::HMILevel::HMI_FULL == hmi_level();
+}
+
+bool ApplicationImpl::is_audio() const {
+  return is_media_application() || is_voice_communication_supported() ||
+         is_navi();
 }
 
 void ApplicationImpl::ChangeSupportingAppHMIType() {
@@ -251,6 +256,11 @@ const HmiStatePtr ApplicationImpl::RegularHmiState() const {
 
 const HmiStatePtr ApplicationImpl::PostponedHmiState() const {
   return state_.GetState(HmiState::STATE_ID_POSTPONED);
+}
+
+void ApplicationImpl::SetAppState(HmiState::StateID state_id,
+                                  StateChangeReason reason) {
+  state_.SetAppState(state_id, reason);
 }
 
 const smart_objects::SmartObject* ApplicationImpl::active_message() const {
@@ -819,6 +829,10 @@ bool ApplicationImpl::is_application_data_changed() const {
 void ApplicationImpl::set_is_application_data_changed(
     bool state_application_data) {
   is_application_data_changed_ = state_application_data;
+}
+
+void ApplicationImpl::SetInitialState(HmiStatePtr state) {
+  state_.InitState(state);
 }
 
 void ApplicationImpl::UpdateHash() {
