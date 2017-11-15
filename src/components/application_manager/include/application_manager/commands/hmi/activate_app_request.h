@@ -61,8 +61,12 @@ class ActivateAppRequest : public RequestToHMI {
    * @brief Execute command
    **/
   virtual void Run();
+    /**
+     * @brief onTimeOut from request Controller
+     */
+  virtual void onTimeOut();
 
- private:
+private:
   DISALLOW_COPY_AND_ASSIGN(ActivateAppRequest);
 };
 

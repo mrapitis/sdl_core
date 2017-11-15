@@ -90,7 +90,12 @@ class StateController {
                               HmiStatePtr new_state) = 0;
 
   virtual bool IsStateActive(HmiState::StateID state_id) const = 0;
-  
+
+    /**
+ * @brief Notifies that activate application request finished by timeout.
+ * @param hmi_app_id contains HMI id of application.
+ */
+    virtual void OnTimeOutActivateAppRequest(uint32_t hmi_app_id) = 0;
   
   /**
    * @brief Changes phone call state

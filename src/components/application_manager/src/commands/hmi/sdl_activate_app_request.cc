@@ -121,92 +121,108 @@ void SDLActivateAppRequest::Run() {
 
 #else  // EXTERNAL_PROPRIETARY_MODE
 void SDLActivateAppRequest::Run() {
-  LOG4CXX_AUTO_TRACE(logger_);
-  using namespace hmi_apis::FunctionID;
-  using namespace hmi_apis::Common_Result;
-
-  const uint32_t application_id = app_id();
-
-  ApplicationConstSharedPtr app_to_activate =
-      application_manager_.application(application_id);
-
-  if (!app_to_activate) {
-    LOG4CXX_WARN(
-        logger_,
-        "Can't find application within regular apps: " << application_id);
-
-    // Here is the hack - in fact SDL gets hmi_app_id in appID field and
-    // replaces it with connection_key only for normally registered apps, but
-    // for apps_to_be_registered (waiting) it keeps original value (hmi_app_id)
-    // so method does lookup for hmi_app_id
-    app_to_activate =
-        application_manager_.WaitingApplicationByID(application_id);
-
-    if (!app_to_activate) {
-      LOG4CXX_WARN(
-          logger_,
-          "Can't find application within waiting apps: " << application_id);
-      return;
-    }
-  }
-
-  LOG4CXX_DEBUG(logger_,
-                "Found application to activate. Application id is "
-                    << app_to_activate->app_id());
-
+  const std::string kHmiDeactivationString = "HMIDeactivate is active";
   if (application_manager_.state_controller().IsStateActive(
-          HmiState::StateID::STATE_ID_DEACTIVATE_HMI)) {
-    LOG4CXX_WARN(logger_,
-                 "DeactivateHmi state is active. "
-                 "Sends response with result code REJECTED");
+          HmiState::STATE_ID_DEACTIVATE_HMI)) {
+//    SDL_LOG_DEBUG(
+//            "DeactivateHmi state is active. "
+//                    "Sends response with result code REJECTED");
     SendErrorResponse(correlation_id(),
                       static_cast<hmi_apis::FunctionID::eType>(function_id()),
                       hmi_apis::Common_Result::REJECTED,
-                      "HMIDeactivate is active");
-    return;
-  }
-
-  if (app_to_activate->IsRegistered()) {
-    LOG4CXX_DEBUG(logger_, "Application is registered. Activating.");
+                      kHmiDeactivationString);
+  } else {
+    const uint32_t application_id = app_id();
     application_manager_.GetPolicyHandler().OnActivateApp(application_id,
                                                           correlation_id());
-    return;
   }
 
-  connection_handler::DeviceHandle device_handle = app_to_activate->device();
-  ApplicationSharedPtr foreground_v4_app = get_foreground_app(device_handle);
-  V4ProtoApps v4_proto_apps = get_v4_proto_apps(device_handle);
-
-  if (!foreground_v4_app && v4_proto_apps.empty()) {
-    LOG4CXX_ERROR(logger_,
-                  "Can't find regular foreground app with the same "
-                  "connection id:"
-                      << device_handle);
-    SendErrorResponse(
-        correlation_id(), SDL_ActivateApp, NO_APPS_REGISTERED, "");
-    return;
-  }
-
-  LOG4CXX_DEBUG(logger_,
-                "Application is not registered yet. "
-                "Sending launch request.");
-
-  if (foreground_v4_app) {
-    LOG4CXX_DEBUG(logger_, "Sending request to foreground application.");
-    MessageHelper::SendLaunchApp(foreground_v4_app->app_id(),
-                                 app_to_activate->SchemaUrl(),
-                                 app_to_activate->PackageName(),
-                                 application_manager_);
-  } else {
-    LOG4CXX_DEBUG(logger_,
-                  "No preffered (foreground) application is found. "
-                  "Sending request to all v4 applications.");
-    std::for_each(v4_proto_apps.begin(),
-                  v4_proto_apps.end(),
-                  SendLaunchApp(app_to_activate, application_manager_));
-  }
-
-  subscribe_on_event(BasicCommunication_OnAppRegistered);
+//  LOG4CXX_AUTO_TRACE(logger_);
+//  using namespace hmi_apis::FunctionID;
+//  using namespace hmi_apis::Common_Result;
+//
+//  const uint32_t application_id = app_id();
+//
+//  ApplicationConstSharedPtr app_to_activate =
+//      application_manager_.application(application_id);
+//
+//  if (!app_to_activate) {
+//    LOG4CXX_WARN(
+//        logger_,
+//        "Can't find application within regular apps: " << application_id);
+//
+//    // Here is the hack - in fact SDL gets hmi_app_id in appID field and
+//    // replaces it with connection_key only for normally registered apps, but
+//    // for apps_to_be_registered (waiting) it keeps original value (hmi_app_id)
+//    // so method does lookup for hmi_app_id
+//    app_to_activate =
+//        application_manager_.WaitingApplicationByID(application_id);
+//
+//    if (!app_to_activate) {
+//      LOG4CXX_WARN(
+//          logger_,
+//          "Can't find application within waiting apps: " << application_id);
+//      return;
+//    }
+//  }
+//
+//  LOG4CXX_DEBUG(logger_,
+//                "Found application to activate. Application id is "
+//                    << app_to_activate->app_id());
+//
+//  if (application_manager_.state_controller().IsStateActive(
+//          HmiState::StateID::STATE_ID_DEACTIVATE_HMI)) {
+//    LOG4CXX_WARN(logger_,
+//                 "DeactivateHmi state is active. "
+//                 "Sends response with result code REJECTED");
+//    SendErrorResponse(correlation_id(),
+//                      static_cast<hmi_apis::FunctionID::eType>(function_id()),
+//                      hmi_apis::Common_Result::REJECTED,
+//                      "HMIDeactivate is active");
+//    return;
+//  }
+//
+//  if (app_to_activate->IsRegistered()) {
+//    LOG4CXX_DEBUG(logger_, "Application is registered. Activating.");
+//    application_manager_.GetPolicyHandler().OnActivateApp(application_id,
+//                                                          correlation_id());
+//    return;
+//  }
+//
+//  connection_handler::DeviceHandle device_handle = app_to_activate->device();
+//  ApplicationSharedPtr foreground_v4_app = get_foreground_app(device_handle);
+//  V4ProtoApps v4_proto_apps = get_v4_proto_apps(device_handle);
+//
+//  if (!foreground_v4_app && v4_proto_apps.empty()) {
+//    LOG4CXX_ERROR(logger_,
+//                  "Can't find regular foreground app with the same "
+//                  "connection id:"
+//                      << device_handle);
+//    SendErrorResponse(
+//        correlation_id(), SDL_ActivateApp, NO_APPS_REGISTERED, "");
+//    return;
+//  }
+//
+//  LOG4CXX_DEBUG(logger_,
+//                "Application is not registered yet. "
+//                "Sending launch request.");
+//
+//  if (foreground_v4_app) {
+//    LOG4CXX_DEBUG(logger_, "Sending request to foreground application.");
+//    MessageHelper::SendLaunchApp(foreground_v4_app->app_id(),
+//                                 app_to_activate->SchemaUrl(),
+//                                 app_to_activate->PackageName(),
+//                                 application_manager_);
+//  } else {
+//    LOG4CXX_DEBUG(logger_,
+//                  "No preffered (foreground) application is found. "
+//                  "Sending request to all v4 applications.");
+//    std::for_each(v4_proto_apps.begin(),
+//                  v4_proto_apps.end(),
+//                  SendLaunchApp(app_to_activate, application_manager_));
+//  }
+//
+//  subscribe_on_event(BasicCommunication_OnAppRegistered);
 }
 
 #endif  // EXTERNAL_PROPRIETARY_MODE
