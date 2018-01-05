@@ -64,6 +64,11 @@ void ActivateAppRequest::Run() {
   LOG4CXX_TRACE(logger_, "exit");
 }
 
+void ActivateAppRequest::onTimeOut() {
+  application_manager_.state_controller().OnTimeOutActivateAppRequest(
+  RequestToHMI::application_id());
+}
+
 }  // namespace commands
 
 }  // namespace application_manager

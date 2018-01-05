@@ -85,6 +85,7 @@ ApplicationImpl::ApplicationImpl(
     : grammar_id_(0)
     , hmi_app_id_(0)
     , app_id_(application_id)
+    , app_type_(AT_COMMON)
     , active_message_(NULL)
     , is_media_(false)
     , is_navi_(false)
@@ -96,6 +97,7 @@ ApplicationImpl::ApplicationImpl(
     , audio_streaming_suspended_(true)
     , is_app_allowed_(true)
     , has_been_activated_(false)
+    , keeping_hmi_level_(false)
     , tts_properties_in_none_(false)
     , tts_properties_in_full_(false)
     , is_foreground_(false)
@@ -165,6 +167,10 @@ ApplicationImpl::~ApplicationImpl() {
 void ApplicationImpl::CloseActiveMessage() {
   delete active_message_;
   active_message_ = NULL;
+}
+
+bool ApplicationImpl::is_app_type_included(AppType app_type) const {
+  return app_type_ & app_type;
 }
 
 bool ApplicationImpl::IsFullscreen() const {
@@ -816,6 +822,14 @@ DataAccessor<ButtonSubscriptions> ApplicationImpl::SubscribedButtons() const {
 DataAccessor<VehicleInfoSubscriptions> ApplicationImpl::SubscribedIVI() const {
   return DataAccessor<VehicleInfoSubscriptions>(subscribed_vehicle_info_,
                                                 vi_lock_);
+}
+
+void ApplicationImpl::set_keeping_hmi_level(bool state) {
+  keeping_hmi_level_ = state;
+}
+
+bool ApplicationImpl::keeping_hmi_level() const {
+  return keeping_hmi_level_;
 }
 
 const std::string& ApplicationImpl::curHash() const {

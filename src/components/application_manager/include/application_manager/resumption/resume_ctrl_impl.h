@@ -134,6 +134,18 @@ class ResumeCtrlImpl : public ResumeCtrl,
   void OnAwake() OVERRIDE;
 
   /**
+   * @brief Postpone HMI Level resumption after receiving signal
+   * "DEACTIVATE_HMI" isActive = true from HMI.
+   */
+  void PostponeHmiLevelResumption() FINAL;
+
+  /**
+   * @brief Restore HMI Level resumption after receiving signal "DEACTIVATE_HMI"
+   * isActive = false from HMI.
+   */
+  void RestoreHmiLevelResumption() FINAL;
+
+  /**
    * @brief Method stops timer "RsmCtrlPercist" when SDL
    * receives OnExitAllApplication notification
    * with reason "SUSPEND"

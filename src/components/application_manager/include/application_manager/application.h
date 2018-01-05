@@ -390,6 +390,14 @@ class Application : public virtual InitialApplicationData,
   enum ApplicationRegisterState { kRegistered = 0, kWaitingForRegistration };
 
  public:
+  enum AppType {
+      AT_COMMON = 0x1,
+      AT_MEDIA = 0x2,
+      AT_NAVIGATION = 0x4,
+      AT_VOICECOMM = 0x8,
+      AT_COMMON_MEDIA = AT_COMMON | AT_MEDIA,
+      AT_COMMON_NAVI = AT_COMMON | AT_NAVIGATION
+  };
   Application() : is_greyed_out_(false) {}
   virtual ~Application() {}
 
@@ -429,6 +437,7 @@ class Application : public virtual InitialApplicationData,
   virtual void CloseActiveMessage() = 0;
   virtual bool IsFullscreen() const = 0;
   virtual void ChangeSupportingAppHMIType() = 0;
+  virtual bool is_app_type_included(AppType app_type) const = 0;
 
   virtual bool is_navi() const = 0;
   virtual void set_is_navi(bool allow) = 0;
@@ -795,6 +804,15 @@ class Application : public virtual InitialApplicationData,
    * @return free app space.
    */
   virtual uint32_t GetAvailableDiskSpace() = 0;
+  /**
+   * @brief Set keeping hmi level flag
+   */
+  virtual void set_keeping_hmi_level(const bool state) = 0;
+  /**
+   * @brief Get keeping_hmi_level_ flag
+   * @return true if keeping hmi level enabled and false otherwise
+  */
+  virtual bool keeping_hmi_level() const = 0;
 
  protected:
   mutable sync_primitives::Lock hmi_states_lock_;

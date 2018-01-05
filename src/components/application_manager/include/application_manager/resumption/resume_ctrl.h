@@ -120,6 +120,18 @@ class ResumeCtrl {
   virtual void OnAwake() = 0;
 
   /**
+   * @brief Postpone HMI Level resumption after receiving signal
+   * "DEACTIVATE_HMI" isActive = true from HMI.
+   */
+  virtual void PostponeHmiLevelResumption() = 0;
+
+  /**
+   * @brief Restore HMI Level resumption after receiving signal "DEACTIVATE_HMI"
+   * isActive = false from HMI.
+   */
+  virtual void RestoreHmiLevelResumption() = 0;
+
+  /**
    * @brief Method stops timer "RsmCtrlPercist" when SDL
    * receives OnExitAllApplication notification
    * with reason "SUSPEND"

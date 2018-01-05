@@ -111,6 +111,7 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   void StopStreaming(protocol_handler::ServiceType service_type);
   void SuspendStreaming(protocol_handler::ServiceType service_type);
   void WakeUpStreaming(protocol_handler::ServiceType service_type);
+  bool is_app_type_included(AppType app_type) const OVERRIDE;
 
   virtual bool is_voice_communication_supported() const;
   virtual void set_voice_communication_supported(
@@ -180,6 +181,17 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   bool UnsubscribeFromIVI(uint32_t vehicle_info_type) OVERRIDE;
   DataAccessor<VehicleInfoSubscriptions> SubscribedIVI() const OVERRIDE;
   inline bool IsRegistered() const OVERRIDE;
+
+  /**
+   * @brief Set keeping hmi level flag
+   */
+  void set_keeping_hmi_level(const bool state) OVERRIDE;
+
+  /**
+   * @brief Get keeping_hmi_level_ flag
+   * @return true if keeping hmi level enabled and false otherwise
+   */
+  bool keeping_hmi_level() const OVERRIDE;
 
   /**
    * @brief ResetDataInNone reset data counters in NONE
@@ -352,6 +364,7 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
   custom_str::CustomString app_name_;
   uint32_t hmi_app_id_;
   uint32_t app_id_;
+  uint32_t app_type_;
   smart_objects::SmartObject* active_message_;
   bool is_media_;
   bool is_navi_;
@@ -367,6 +380,7 @@ class ApplicationImpl : public virtual InitialApplicationDataImpl,
 
   bool is_app_allowed_;
   bool has_been_activated_;
+  bool keeping_hmi_level_;
   bool tts_properties_in_none_;
   bool tts_properties_in_full_;
   bool is_foreground_;

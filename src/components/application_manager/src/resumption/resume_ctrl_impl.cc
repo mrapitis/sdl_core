@@ -276,6 +276,19 @@ void ResumeCtrlImpl::OnAwake() {
   StartSavePersistentDataTimer();
   return resumption_storage_->OnAwake();
 }
+void ResumeCtrlImpl::PostponeHmiLevelResumption() {
+  if (is_resumption_active_) {
+    StopSavePersistentDataTimer();
+    return;
+  }
+  SaveAllApplications();
+}
+
+void ResumeCtrlImpl::RestoreHmiLevelResumption() {
+  if (is_resumption_active_) {
+    StartSavePersistentDataTimer();
+  }
+}
 
 void ResumeCtrlImpl::StartSavePersistentDataTimer() {
   LOG4CXX_AUTO_TRACE(logger_);
