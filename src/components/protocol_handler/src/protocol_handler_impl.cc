@@ -274,12 +274,15 @@ void ProtocolHandlerImpl::SendStartSessionAck(
                                            session_id,
                                            0u,
                                            message_counters_[session_id]++));
+  ServiceType serviceTypeValue;
+  bool bson_success1 = false;
+  bool bson_success2 = false;
+  bool bson_success3 = false;
 
   // Cannot include a constructed payload if either side doesn't support it
   if (ack_protocol_version >= PROTOCOL_VERSION_5) {
-    ServiceType serviceTypeValue = ServiceTypeFromByte(service_type);
-
-    bson_object_put_int64(
+     serviceTypeValue = ServiceTypeFromByte(service_type);
+     bson_success1 = bson_object_put_int64(
         &params,
         strings::mtu,
         static_cast<int64_t>(
@@ -287,7 +290,7 @@ void ProtocolHandlerImpl::SendStartSessionAck(
                 serviceTypeValue)));
     if (serviceTypeValue == kRpc) {
       // Hash ID is only used in RPC case
-      bson_object_put_int32(
+      bson_success2 = bson_object_put_int32(
           &params, strings::hash_id, static_cast<int32_t>(hash_id));
       // Minimum protocol version supported by both
       ProtocolPacket::ProtocolVersion* minVersion =
@@ -297,7 +300,7 @@ void ProtocolHandlerImpl::SendStartSessionAck(
                                                      defaultProtocolVersion);
       char protocolVersionString[256];
       strncpy(protocolVersionString, (*minVersion).to_string().c_str(), 255);
-      bson_object_put_string(
+      bson_success3 = bson_object_put_string(
           &params, strings::protocol_version, protocolVersionString);
     }
     uint8_t* payloadBytes = bson_object_to_bytes(&params);
@@ -315,7 +318,13 @@ void ProtocolHandlerImpl::SendStartSessionAck(
                     << connection_id << " for service_type "
                     << static_cast<int32_t>(service_type) << " session_id "
                     << static_cast<int32_t>(session_id) << " protection "
-                    << (protection ? "ON" : "OFF"));
+                    << (protection ? "ON" : "OFF")
+                    << " hashid " << static_cast<int32_t>(bson_object_get_int32(&params, strings::hash_id))
+                    << " mtu " << static_cast<int32_t>(bson_object_get_int64(&params, strings::mtu))
+                    << " protocol_version " <<   bson_object_get_string(&params, strings::protocol_version)
+                    << "bson_success1 " << bson_success1
+                    << "bson_success2 " << bson_success2
+                    << "bson_success3 " << bson_success3);
 }
 
 void ProtocolHandlerImpl::SendStartSessionNAck(ConnectionID connection_id,
@@ -1619,6 +1628,47 @@ void ProtocolHandlerImpl::NotifySessionStarted(
                            packet->service_type(),
                            rejected_params);
     } else if (ssl_context->IsInitCompleted()) {
+
+    //  BsonObject req_param = bson_object_from_bytes(packet->data());
+      ServiceType serviceTypeValue;
+      bool bson_success1 = false;
+      bool bson_success2 = false;
+      bool bson_success3 = false;
+
+      if (fullVersion->majorVersion  >= PROTOCOL_VERSION_5) {
+        serviceTypeValue = ServiceTypeFromByte(service_type);
+        bson_success1 = bson_object_put_int64(
+                start_session_ack_params.get(),
+                strings::mtu,
+                static_cast<int64_t>(
+                        protocol_header_validator_.max_payload_size_by_service_type(
+                                serviceTypeValue)));
+        if (serviceTypeValue == kRpc) {
+          // Hash ID is only used in RPC case
+          bson_success2 = bson_object_put_int32(
+                  start_session_ack_params.get(), strings::hash_id, static_cast<int32_t>(context.hash_id_));
+          // Minimum protocol version supported by both
+          ProtocolPacket::ProtocolVersion* minVersion =
+                  (fullVersion->majorVersion < PROTOCOL_VERSION_5)
+                  ? &defaultProtocolVersion
+                  : ProtocolPacket::ProtocolVersion::min(*fullVersion,
+                                                         defaultProtocolVersion);
+          char protocolVersionString[256];
+          strncpy(protocolVersionString, (*minVersion).to_string().c_str(), 255);
+          bson_success3 = bson_object_put_string(
+                  start_session_ack_params.get(), strings::protocol_version, protocolVersionString);
+        }
+        uint8_t* payloadBytes = bson_object_to_bytes(&params);
+        ptr->set_data(payloadBytes, bson_object_size(&params));
+        free(payloadBytes);
+      }
+
+
+      LOG4CXX_DEBUG(logger_,
+                            "bson_success1 " << bson_success1
+                            << "bson_success2 " << bson_success2
+                            << "bson_success3 " << bson_success3);
+
       // mark service as protected
       session_observer_.SetProtectionFlag(connection_key, service_type);
       // Start service as protected with current SSLContext
@@ -1845,9 +1895,8 @@ void ProtocolHandlerImpl::set_security_manager(
 
 RESULT_CODE ProtocolHandlerImpl::EncryptFrame(ProtocolFramePtr packet) {
   DCHECK(packet);
-  // Control frames and data over control service shall be unprotected
-  if (packet->service_type() == kControl ||
-      packet->frame_type() == FRAME_TYPE_CONTROL) {
+  // Data over control service shall be unprotected, control frames can be protected
+  if (packet->service_type() == kControl) {
     return RESULT_OK;
   }
   if (!security_manager_) {
@@ -1891,9 +1940,11 @@ RESULT_CODE ProtocolHandlerImpl::EncryptFrame(ProtocolFramePtr packet) {
 RESULT_CODE ProtocolHandlerImpl::DecryptFrame(ProtocolFramePtr packet) {
   DCHECK(packet);
   if (!packet->protection_flag() ||
-      // Control frames and data over control service shall be unprotected
-      packet->service_type() == kControl ||
-      packet->frame_type() == FRAME_TYPE_CONTROL) {
+      // Data over control service shall be unprotected
+      packet->service_type() == kControl
+      || (packet->frame_type() == FRAME_TYPE_CONTROL && packet->service_type() == kMobileNav )  //Start service requests shall be unprotected
+      || (packet->frame_type() == FRAME_TYPE_CONTROL && packet->service_type() == kAudio )
+      || (packet->frame_type() == FRAME_TYPE_CONTROL && packet->service_type() == kRpc )) {
     return RESULT_OK;
   }
   if (!security_manager_) {

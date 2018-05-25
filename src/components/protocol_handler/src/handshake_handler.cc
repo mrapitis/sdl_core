@@ -111,11 +111,7 @@ bool HandshakeHandler::OnHandshakeDone(
       result == security_manager::SSLContext::Handshake_Result_Success;
 
   BsonObject params;
-  if (payload_) {
-    params = bson_object_from_bytes(payload_.get());
-  } else {
-    bson_object_initialize_default(&params);
-  }
+  bson_object_initialize_default(&params);
 
   if (success) {
     ProcessSuccessfulHandshake(connection_key, params);
