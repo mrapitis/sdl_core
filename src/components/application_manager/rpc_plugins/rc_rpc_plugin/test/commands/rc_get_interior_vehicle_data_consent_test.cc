@@ -91,6 +91,7 @@ namespace {
 const uint32_t kConnectionKey = 2u;
 const uint32_t kAppId = 5u;
 const std::string kResource = "CLIMATE";
+const std::string kResourceId = "id1";
 const uint32_t kPluginID = RCRPCPlugin::kRCPluginID;
 }  // namespace
 
@@ -140,7 +141,7 @@ class RCGetInteriorVehicleDataConsentTest
         .WillByDefault(ReturnRef(*mock_rpc_plugin_manager));
     ON_CALL(*mock_rpc_plugin_manager, FindPluginToProcess(_, _))
         .WillByDefault(Return(rpc_plugin));
-    ON_CALL(mock_allocation_manager_, IsResourceFree(kResource))
+    ON_CALL(mock_allocation_manager_, IsResourceFree(kResource, kResourceId))
         .WillByDefault(Return(true));
     ON_CALL(mock_allocation_manager_, is_rc_enabled())
         .WillByDefault(Return(true));
@@ -168,6 +169,10 @@ class RCGetInteriorVehicleDataConsentTest
               [application_manager::strings::connection_key] = kConnectionKey;
     (*message)[application_manager::strings::params]
               [application_manager::strings::connection_key] = kAppId;
+    ns_smart_device_link::ns_smart_objects::SmartObject& msg_params =
+        (*message)[application_manager::strings::msg_params];
+    msg_params[message_params::kModuleType] = kResource;
+    msg_params[message_params::kModuleId] = kResourceId;
     return message;
   }
 
@@ -201,7 +206,7 @@ TEST_F(RCGetInteriorVehicleDataConsentTest,
   auto mobile_message = CreateBasicMessage();
 
   // Expectations
-  EXPECT_CALL(mock_allocation_manager_, AcquireResource(_, _))
+  EXPECT_CALL(mock_allocation_manager_, AcquireResource(_, _, _))
       .WillOnce(Return(rc_rpc_plugin::AcquireResult::ASK_DRIVER));
   EXPECT_CALL(*optional_mock_rpc_plugin, GetCommandFactory())
       .WillOnce(ReturnRef(mock_command_factory));
@@ -227,7 +232,7 @@ TEST_F(RCGetInteriorVehicleDataConsentTest,
   auto mobile_message = CreateBasicMessage();
 
   // Expectations
-  EXPECT_CALL(mock_allocation_manager_, AcquireResource(_, _))
+  EXPECT_CALL(mock_allocation_manager_, AcquireResource(_, _, _))
       .WillOnce(Return(rc_rpc_plugin::AcquireResult::IN_USE));
 
   EXPECT_CALL(*optional_mock_rpc_plugin, GetCommandFactory())
