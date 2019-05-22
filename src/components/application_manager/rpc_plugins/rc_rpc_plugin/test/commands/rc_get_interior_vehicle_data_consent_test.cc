@@ -102,6 +102,7 @@ class RCGetInteriorVehicleDataConsentTest
   RCGetInteriorVehicleDataConsentTest()
       : mock_app_(std::make_shared<NiceMock<MockApplication> >())
       , command_holder(app_mngr_)
+      , rc_capabilities_(smart_objects::SmartType::SmartType_Array)
       , request_controller(mock_request_controler)
       , rpc_service_(app_mngr_,
                      request_controller,
@@ -113,6 +114,8 @@ class RCGetInteriorVehicleDataConsentTest
             std::make_shared<NiceMock<MockRPCPluginManager> >())
       , rpc_plugin(mock_rpc_plugin)
       , optional_mock_rpc_plugin(mock_rpc_plugin) {
+    smart_objects::SmartObject control_caps((smart_objects::SmartType_Array));
+    rc_capabilities_[strings::kradioControlCapabilities] = control_caps;
     ON_CALL(*mock_app_, app_id()).WillByDefault(Return(kAppId));
     ON_CALL(app_mngr_, hmi_interfaces())
         .WillByDefault(ReturnRef(mock_hmi_interfaces_));
@@ -145,6 +148,8 @@ class RCGetInteriorVehicleDataConsentTest
     ON_CALL(mock_allocation_manager_, IsResourceFree(kResource, kResourceId))
         .WillByDefault(Return(true));
     ON_CALL(mock_allocation_manager_, is_rc_enabled())
+        .WillByDefault(Return(true));
+    ON_CALL(mock_rc_capabilities_manager_, CheckIfModuleExistInCapabilities(_))
         .WillByDefault(Return(true));
   }
 
