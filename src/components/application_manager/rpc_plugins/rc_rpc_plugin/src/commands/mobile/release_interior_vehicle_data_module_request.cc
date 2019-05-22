@@ -132,7 +132,7 @@ void ReleaseInteriorVehicleDataModuleRequest::Execute() {
   std::string response_info;
   ResponseParams response_params{response_info,
                                  ModuleType(),
-                                 ModuleId(),
+                                 module_id,
                                  result_code,
                                  app_id,
                                  success_result};
@@ -145,7 +145,7 @@ void ReleaseInteriorVehicleDataModuleRequest::Execute() {
 
   LOG4CXX_DEBUG(logger_,
                 "Resource for module: "
-                    << ModuleType() << " with id: " << ModuleId()
+                    << ModuleType() << " with id: " << module_id
                     << " was released with result " << std::boolalpha
                     << response_params.success_result
                     << " and result_code: " << response_params.result_code);
@@ -155,7 +155,8 @@ void ReleaseInteriorVehicleDataModuleRequest::Execute() {
                response_params.response_info.c_str());
 }
 
-std::string ReleaseInteriorVehicleDataModuleRequest::ModuleType() {
+std::string ReleaseInteriorVehicleDataModuleRequest::ModuleType() const {
+  LOG4CXX_AUTO_TRACE(logger_);
   mobile_apis::ModuleType::eType module_type =
       static_cast<mobile_apis::ModuleType::eType>(
           (*message_)[app_mngr::strings::msg_params]
@@ -169,10 +170,14 @@ std::string ReleaseInteriorVehicleDataModuleRequest::ModuleType() {
 }
 
 std::string ReleaseInteriorVehicleDataModuleRequest::ModuleId() const {
-  // TODO: check if moduleId param is present in the message, if not-
-  // extract it from the capabilities
-  return (*message_)[app_mngr::strings::msg_params][message_params::kModuleId]
-      .asString();
+  LOG4CXX_AUTO_TRACE(logger_);
+  auto msg_params = (*message_)[app_mngr::strings::msg_params];
+  if (msg_params.keyExists(message_params::kModuleId)) {
+    return msg_params[message_params::kModuleId].asString();
+  }
+  const std::string module_id =
+      rc_capabilities_manager_.GetDefaultModuleIdFromCapabilities(ModuleType());
+  return module_id;
 }
 
 ReleaseInteriorVehicleDataModuleRequest::
