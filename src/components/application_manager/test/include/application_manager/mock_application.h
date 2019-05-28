@@ -357,6 +357,9 @@ class MockApplication : public ::application_manager::Application {
                void(const mobile_apis::HybridAppPreference::eType&
                         hybrid_app_preference));
   MOCK_METHOD1(set_cloud_app_certificate, void(const std::string& certificate));
+  MOCK_METHOD1(set_user_location,
+               void(const smart_objects::SmartObject& user_location));
+  MOCK_CONST_METHOD0(get_user_location, const smart_objects::SmartObject&());
 };
 
 }  // namespace application_manager_test
