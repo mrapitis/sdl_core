@@ -38,6 +38,7 @@
 #include "rc_rpc_plugin/interior_data_cache.h"
 #include "rc_rpc_plugin/rc_app_extension.h"
 #include "rc_rpc_plugin/rc_capabilities_manager.h"
+#include "rc_rpc_plugin/rc_consent_manager.h"
 #include "rc_rpc_plugin/resource_allocation_manager.h"
 
 namespace rc_rpc_plugin {
@@ -78,6 +79,7 @@ class RCCommandRequest : public app_mngr::commands::CommandRequestImpl {
   InteriorDataCache& interior_data_cache_;
   InteriorDataManager& interior_data_manager_;
   RCCapabilitiesManager& rc_capabilities_manager_;
+  RCConsentManager& rc_consent_manager_;
   /**
    * @brief AcquireResource try to allocate resource for application
    * In case if allocation of resource is not required, return ALLOWED by
@@ -180,8 +182,35 @@ class RCCommandRequest : public app_mngr::commands::CommandRequestImpl {
    * @brief SendGetUserConsent sends consent request to HMI
    * @param module_type Resource name
    */
-  void SendGetUserConsent(const std::string& module_type);
+  void SendGetUserConsent(const std::string& module_type,
+                          const smart_objects::SmartObject& module_ids);
+
   void ProcessAccessResponse(const app_mngr::event_engine::Event& event);
+
+  /**
+   * @brief Precesses consents result which has been received from HMI
+   * If module resource consented, resource state will be switched to state BUSY
+   * and called method Execute. Otherwise will be sent response to Mobile with
+   * result code REJECTED.
+   * @param is_allowed consent result
+   * @param module_type Module type
+   * @param module_id Module ID
+   * @param app_id Application, which has asked for module resource consent.
+   */
+  void ProcessConsentResult(const bool is_allowed,
+                            const std::string& module_type,
+                            const std::string& module_id,
+                            const uint32_t app_id);
+  /**
+   * @brief Processes ASK_DRIVE Mode. Tries to retrieve module consents from
+   * LastState. If consent is absetn in LastState, will send
+   * GetInteriorVehicleDataConsent to HMI. Otherwise will start process consents
+   * result.
+   * @param module_type Module type
+   * @param module_id Module ID
+   */
+  void ProcessAskDriverMode(const std::string& module_type,
+                            const std::string& module_id);
   bool IsInterfaceAvailable(
       const app_mngr::HmiInterfaces::InterfaceID interface) const;
 
