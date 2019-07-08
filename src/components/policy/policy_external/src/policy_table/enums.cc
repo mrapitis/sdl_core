@@ -1159,6 +1159,16 @@ bool EnumFromJsonString(const std::string& literal, FunctionID* result) {
     return true;
   }
 
+  if ("GetInteriorVehicleDataConsent" == literal) {
+    *result = GetInteriorVehicleDataConsentID;
+    return true;
+  }
+
+  if ("ReleaseInteriorVehicleDataModule" == literal) {
+    *result = ReleaseInteriorVehicleDataModuleID;
+    return true;
+  }
+
   if ("OnHMIStatus" == literal) {
     *result = OnHMIStatusID;
     return true;

@@ -457,6 +457,16 @@ enum FunctionID {
   PerformAppServiceInteractionID = 55,
 
   /**
+   * @brief GetInteriorVehicleDataConsentID.
+   */
+  GetInteriorVehicleDataConsentID = 58,
+
+  /**
+   * @brief ReleaseInteriorVehicleDataModuleID.
+   */
+  ReleaseInteriorVehicleDataModuleID = 59,
+
+  /**
    * @brief OnHMIStatusID.
    */
   OnHMIStatusID = 32768,
