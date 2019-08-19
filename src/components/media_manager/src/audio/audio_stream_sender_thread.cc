@@ -134,7 +134,7 @@ void AudioStreamSenderThread::sendAudioChunkToMobile() {
   }
 #if !defined(EXTENDED_MEDIA_MODE)
   // without recording stream restart reading 1-sec file
-  offset_ = kRIFFHeaderSize;
+  // offset_ = kRIFFHeaderSize;
 #endif
 }
 
