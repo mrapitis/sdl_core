@@ -33,7 +33,11 @@
 #ifndef SRC_COMPONENTS_MEDIA_MANAGER_INCLUDE_MEDIA_MANAGER_SOCKET_STREAMER_ADAPTER_H_
 #define SRC_COMPONENTS_MEDIA_MANAGER_INCLUDE_MEDIA_MANAGER_SOCKET_STREAMER_ADAPTER_H_
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <string>
+
 #include "media_manager/streamer_adapter.h"
 #include "utils/threads/thread_delegate.h"
 
@@ -70,6 +74,7 @@ class SocketStreamerAdapter : public StreamerAdapter {
     int32_t socket_fd_;
     int32_t send_socket_fd_;
     bool is_first_frame_;
+    struct sockaddr_in serv_addr_;
   };
 };
 

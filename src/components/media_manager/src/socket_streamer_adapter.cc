@@ -62,37 +62,49 @@ SocketStreamerAdapter::SocketStreamer::SocketStreamer(
     , header_(header)
     , socket_fd_(0)
     , send_socket_fd_(0)
-    , is_first_frame_(true) {}
+    , is_first_frame_(true)
+ {}
 
 SocketStreamerAdapter::SocketStreamer::~SocketStreamer() {}
 
+
+
 bool SocketStreamerAdapter::SocketStreamer::Connect() {
   LOG4CXX_AUTO_TRACE(logger);
-  socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+  socket_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (0 >= socket_fd_) {
     LOG4CXX_ERROR(logger, "Unable to create socket");
     return false;
   }
 
+// int sendbuff = 65000;
+
+// int res = setsockopt(socket_fd_, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
+
+//  if (res < 0) {
+//    LOG4CXX_ERROR(logger, "Unable to set sockopt");
+ //   return false;
+ // }
+
   int32_t optval = 1;
-  if (-1 == setsockopt(
+  /*if (-1 == setsockopt(
                 socket_fd_, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval)) {
     LOG4CXX_ERROR(logger, "Unable to set sockopt");
     return false;
-  }
+  }*/
 
-  struct sockaddr_in serv_addr_ = {0};
-  serv_addr_.sin_addr.s_addr = inet_addr(ip_.c_str());
+  serv_addr_ = {0};
+  serv_addr_.sin_addr.s_addr = inet_addr(/*ip_.c_str()*/"192.168.0.45");
   serv_addr_.sin_family = AF_INET;
-  serv_addr_.sin_port = htons(port_);
-  if (-1 == bind(socket_fd_,
+  serv_addr_.sin_port = htons(12346);
+  /*if (-1 == bind(socket_fd_,
                  reinterpret_cast<struct sockaddr*>(&serv_addr_),
                  sizeof(serv_addr_))) {
     LOG4CXX_ERROR(logger, "Unable to bind");
     return false;
-  }
+  }*/
 
-  if (-1 == listen(socket_fd_, 5)) {
+/*  if (-1 == listen(socket_fd_, 5)) {
     LOG4CXX_ERROR(logger, "Unable to listen");
     return false;
   }
@@ -101,7 +113,7 @@ bool SocketStreamerAdapter::SocketStreamer::Connect() {
   if (0 >= send_socket_fd_) {
     LOG4CXX_ERROR(logger, "Unable to accept");
     return false;
-  }
+  }*/
 
   is_first_frame_ = true;
   LOG4CXX_INFO(logger, "Client connected: " << send_socket_fd_);
@@ -129,17 +141,13 @@ void SocketStreamerAdapter::SocketStreamer::Disconnect() {
 bool SocketStreamerAdapter::SocketStreamer::Send(
     protocol_handler::RawMessagePtr msg) {
   LOG4CXX_AUTO_TRACE(logger);
-  ssize_t ret;
-  if (is_first_frame_) {
-    ret = send(send_socket_fd_, header_.c_str(), header_.size(), MSG_NOSIGNAL);
-    if (static_cast<uint32_t>(ret) != header_.size()) {
-      LOG4CXX_ERROR(logger, "Unable to send data to socket");
-      return false;
-    }
-    is_first_frame_ = false;
-  }
-
-  ret = send(send_socket_fd_, msg->data(), msg->data_size(), MSG_NOSIGNAL);
+  LOG4CXX_ERROR(logger, "About to call sendto");
+int ret;  
+//ret = sendto(socket_fd_, msg->data(), msg->data_size(), 0, reinterpret_cast<struct sockaddr*>(&serv_addr_), sizeof(serv_addr_));
+usleep(200000);
+ret = sendto(socket_fd_, msg->data(), msg->data_size(), 0, (struct sockaddr*)&serv_addr_, sizeof(serv_addr_));
+//usleep(100000);
+  LOG4CXX_ERROR(logger, "after call sendto, return code = " << ret );
   if (-1 == ret) {
     LOG4CXX_ERROR(logger, "Unable to send data to socket");
     return false;
